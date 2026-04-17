@@ -97,10 +97,15 @@ function getActiveTab() {
 
 function allSelectedGroups(tab) {
   const out = [];
-  if (tab.primaryGroup) out.push(tab.primaryGroup);
+
+  if (tab.primaryGroup) {
+    out.push(tab.primaryGroup);
+  }
 
   for (const g of tab.compareGroups || []) {
-    if (g && !out.includes(g)) out.push(g);
+    if (g && !out.includes(g)) {
+      out.push(g);
+    }
   }
 
   return out;
@@ -110,18 +115,36 @@ function updateTabTitle(tab) {
   const parts = [];
 
   if (tab.graphMode === "seasons") {
-    if (tab.primaryGroup) parts.push(tab.primaryGroup);
-    if ((tab.compareSeasons || []).length) parts.push(`${tab.compareSeasons.length} seasons`);
+    if (tab.primaryGroup) {
+      parts.push(tab.primaryGroup);
+    }
+
+    if ((tab.compareSeasons || []).length) {
+      parts.push(`${tab.compareSeasons.length} seasons`);
+    }
+
     parts.push("Season Compare");
   } else {
     const selected = allSelectedGroups(tab);
-    if (selected.length === 1) parts.push(selected[0]);
-    else if (selected.length > 1) parts.push(`${selected.length} groups`);
+
+    if (selected.length === 1) {
+      parts.push(selected[0]);
+    } else if (selected.length > 1) {
+      parts.push(`${selected.length} groups`);
+    }
   }
 
-  if (tab.circuit) parts.push(tab.circuit);
-  if (tab.division) parts.push(tab.division.replace(/^Percussion\s+/i, ""));
-  if (tab.graphMode === "groups" && tab.season) parts.push(tab.season);
+  if (tab.circuit) {
+    parts.push(tab.circuit);
+  }
+
+  if (tab.division) {
+    parts.push(tab.division.replace(/^Percussion\s+/i, ""));
+  }
+
+  if (tab.graphMode === "groups" && tab.season) {
+    parts.push(tab.season);
+  }
 
   tab.title = parts.join(" • ") || "New Tab";
 }
@@ -161,7 +184,9 @@ function saveLayout() {
 
 function loadLayout() {
   const raw = localStorage.getItem(LAYOUT_KEY);
-  if (!raw) return;
+  if (!raw) {
+    return;
+  }
 
   try {
     const data = JSON.parse(raw);
@@ -187,6 +212,7 @@ function applyLoadedIndexData(data, sourceName = "") {
 async function autoLoadIndex() {
   try {
     const response = await fetch(AUTO_INDEX_URL, { cache: "no-store" });
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -199,37 +225,69 @@ async function autoLoadIndex() {
 }
 
 function rowMatchesBaseFilters(row, tab) {
-  if (tab.circuit && row.circuit !== tab.circuit) return false;
-  if (tab.division && row.division !== tab.division) return false;
+  if (tab.circuit && row.circuit !== tab.circuit) {
+    return false;
+  }
+
+  if (tab.division && row.division !== tab.division) {
+    return false;
+  }
+
   return true;
 }
 
 function rowMatchesGroupModeFilters(row, tab) {
-  if (!rowMatchesBaseFilters(row, tab)) return false;
-  if (tab.season && row.season !== tab.season) return false;
+  if (!rowMatchesBaseFilters(row, tab)) {
+    return false;
+  }
+
+  if (tab.season && row.season !== tab.season) {
+    return false;
+  }
+
   return true;
 }
 
 function rowMatchesSeasonModeFilters(row, tab) {
-  if (!rowMatchesBaseFilters(row, tab)) return false;
-  if (!tab.primaryGroup) return false;
-  if (row.group !== tab.primaryGroup) return false;
-  if ((tab.compareSeasons || []).length && !tab.compareSeasons.includes(row.season)) return false;
+  if (!rowMatchesBaseFilters(row, tab)) {
+    return false;
+  }
+
+  if (!tab.primaryGroup) {
+    return false;
+  }
+
+  if (row.group !== tab.primaryGroup) {
+    return false;
+  }
+
+  if ((tab.compareSeasons || []).length && !tab.compareSeasons.includes(row.season)) {
+    return false;
+  }
+
   return true;
 }
 
 function getAvailableGroupsForTab(tab) {
-  if (!state.index) return [];
+  if (!state.index) {
+    return [];
+  }
+
   const groups = state.index.groups || {};
   const available = [];
 
   for (const [groupName, rows] of Object.entries(groups)) {
     const match = (rows || []).some((r) => {
-      if (tab.graphMode === "seasons") return rowMatchesBaseFilters(r, tab);
+      if (tab.graphMode === "seasons") {
+        return rowMatchesBaseFilters(r, tab);
+      }
+
       return rowMatchesGroupModeFilters(r, tab);
     });
 
-    if (match) available.push(groupName);
+    if (match) {
+      available.push(groupName);
+    }
   }
 
   available.sort((a, b) => a.localeCompare(b));
@@ -237,7 +295,9 @@ function getAvailableGroupsForTab(tab) {
 }
 
 function getAvailableSeasonsForSeasonMode(tab) {
-  if (!state.index || !tab.primaryGroup) return [];
+  if (!state.index || !tab.primaryGroup) {
+    return [];
+  }
 
   const groups = state.index.groups || {};
   const rows = groups[tab.primaryGroup] || [];
@@ -255,10 +315,14 @@ function getAvailableSeasonsForSeasonMode(tab) {
   return seasons;
 }
 
-function getLatestAvailableSeasonForTab() {
+function getLatestAvailableSeasonForTab(tab) {
   const lists = getLists();
   const seasons = lists.seasons || [];
-  if (!seasons.length) return "";
+
+  if (!seasons.length) {
+    return "";
+  }
+
   return seasons.slice().sort((a, b) => a.localeCompare(b)).at(-1) || "";
 }
 
@@ -310,32 +374,45 @@ function sanitizeTabSelections(tab) {
 }
 
 function getFilteredSeries(tab) {
-  if (!state.index) return [];
+  if (!state.index) {
+    return [];
+  }
 
   const groups = state.index.groups || {};
   let rows = [];
 
   if (tab.graphMode === "seasons") {
-    if (!tab.primaryGroup) return [];
+    if (!tab.primaryGroup) {
+      return [];
+    }
+
     rows.push(...(groups[tab.primaryGroup] || []));
     rows = rows.filter((r) => rowMatchesSeasonModeFilters(r, tab));
   } else {
     for (const groupName of allSelectedGroups(tab)) {
       rows.push(...(groups[groupName] || []));
     }
+
     rows = rows.filter((r) => rowMatchesGroupModeFilters(r, tab));
   }
 
   rows.sort((a, b) => {
     const ta = parseEventDateToTime(a.eventDate);
     const tb = parseEventDateToTime(b.eventDate);
-    if (ta !== tb) return ta - tb;
+
+    if (ta !== tb) {
+      return ta - tb;
+    }
 
     const ea = (a.eventName || "").localeCompare(b.eventName || "");
-    if (ea !== 0) return ea;
+    if (ea !== 0) {
+      return ea;
+    }
 
     const da = (a.division || "").localeCompare(b.division || "");
-    if (da !== 0) return da;
+    if (da !== 0) {
+      return da;
+    }
 
     return (a.group || "").localeCompare(b.group || "");
   });
@@ -347,7 +424,10 @@ function groupSeriesByGroup(rows) {
   const map = new Map();
 
   for (const row of rows) {
-    if (!map.has(row.group)) map.set(row.group, []);
+    if (!map.has(row.group)) {
+      map.set(row.group, []);
+    }
+
     map.get(row.group).push(row);
   }
 
@@ -356,10 +436,15 @@ function groupSeriesByGroup(rows) {
     entries: entries.slice().sort((a, b) => {
       const ta = parseEventDateToTime(a.eventDate);
       const tb = parseEventDateToTime(b.eventDate);
-      if (ta !== tb) return ta - tb;
+
+      if (ta !== tb) {
+        return ta - tb;
+      }
 
       const ea = (a.eventName || "").localeCompare(b.eventName || "");
-      if (ea !== 0) return ea;
+      if (ea !== 0) {
+        return ea;
+      }
 
       return (a.division || "").localeCompare(b.division || "");
     })
@@ -373,7 +458,10 @@ function groupSeriesBySeason(rows) {
   const map = new Map();
 
   for (const row of rows) {
-    if (!map.has(row.season)) map.set(row.season, []);
+    if (!map.has(row.season)) {
+      map.set(row.season, []);
+    }
+
     map.get(row.season).push(row);
   }
 
@@ -382,10 +470,15 @@ function groupSeriesBySeason(rows) {
     entries: entries.slice().sort((a, b) => {
       const ta = parseEventDateToTime(a.eventDate);
       const tb = parseEventDateToTime(b.eventDate);
-      if (ta !== tb) return ta - tb;
+
+      if (ta !== tb) {
+        return ta - tb;
+      }
 
       const ea = (a.eventName || "").localeCompare(b.eventName || "");
-      if (ea !== 0) return ea;
+      if (ea !== 0) {
+        return ea;
+      }
 
       return (a.division || "").localeCompare(b.division || "");
     })
@@ -407,16 +500,23 @@ function buildTimeline(rows) {
       row?.circuit || ""
     ].join("|");
 
-    if (!map.has(key)) map.set(key, row);
+    if (!map.has(key)) {
+      map.set(key, row);
+    }
   }
 
   return Array.from(map.values()).sort((a, b) => {
     const ta = parseEventDateToTime(a.eventDate);
     const tb = parseEventDateToTime(b.eventDate);
-    if (ta !== tb) return ta - tb;
+
+    if (ta !== tb) {
+      return ta - tb;
+    }
 
     const ea = (a.eventName || "").localeCompare(b.eventName || "");
-    if (ea !== 0) return ea;
+    if (ea !== 0) {
+      return ea;
+    }
 
     return (a.division || "").localeCompare(b.division || "");
   });
@@ -430,19 +530,41 @@ function selectedMetrics(tab) {
   const metrics = ["finalScore"];
 
   for (const [key, on] of Object.entries(tab.subs || {})) {
-    if (on) metrics.push(key);
+    if (on) {
+      metrics.push(key);
+    }
   }
 
   return metrics;
 }
 
+function legendSwatch(color, dash) {
+  const dashAttr = dash ? ` stroke-dasharray="${escapeXml(dash)}"` : "";
+
+  return `
+    <svg class="legend-swatch" viewBox="0 0 18 6" aria-hidden="true" focusable="false">
+      <line
+        x1="0"
+        y1="3"
+        x2="18"
+        y2="3"
+        stroke="${escapeXml(color)}"
+        stroke-width="3"
+        stroke-linecap="round"${dashAttr}
+      ></line>
+    </svg>
+  `;
+}
+
 function buildSvgChartGroupCompare(tab, rows) {
   const grouped = groupSeriesByGroup(rows);
+
   if (!grouped.length) {
     return `<div class="empty-state">Load index.json and choose a primary group or comparison group.</div>`;
   }
 
   const timeline = buildTimeline(rows);
+
   if (!timeline.length) {
     return `<div class="empty-state">No event timeline could be built for the current selection.</div>`;
   }
@@ -454,6 +576,7 @@ function buildSvgChartGroupCompare(tab, rows) {
     for (const row of g.entries) {
       for (const m of metrics) {
         const val = scoreValue(row, m);
+
         if (typeof val === "number" && !Number.isNaN(val)) {
           allValues.push(val);
         }
@@ -479,6 +602,7 @@ function buildSvgChartGroupCompare(tab, rows) {
   const xCount = Math.max(1, timeline.length - 1);
 
   const timelineIndex = new Map();
+
   timeline.forEach((row, idx) => {
     const key = [
       row?.season || "",
@@ -487,6 +611,7 @@ function buildSvgChartGroupCompare(tab, rows) {
       row?.division || "",
       row?.circuit || ""
     ].join("|");
+
     timelineIndex.set(key, idx);
   });
 
@@ -525,6 +650,7 @@ function buildSvgChartGroupCompare(tab, rows) {
   for (let i = 0; i <= 5; i++) {
     const value = minY + (span * i / 5);
     const y = yAt(value);
+
     svg += `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="#223246" stroke-width="1"/>`;
     svg += `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#8aa0b8">${value.toFixed(1)}</text>`;
   }
@@ -532,6 +658,7 @@ function buildSvgChartGroupCompare(tab, rows) {
   timeline.forEach((row, idx) => {
     const x = xAt(idx);
     const labelY = height - padB + 16;
+
     svg += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${height - padB}" stroke="#182233" stroke-width="1"/>`;
     svg += `<text x="${x}" y="${labelY}" text-anchor="end" transform="rotate(-35 ${x} ${labelY})" font-size="11" fill="#8aa0b8">${escapeXml(row.eventDate)}</text>`;
   });
@@ -555,13 +682,17 @@ function buildSvgChartGroupCompare(tab, rows) {
           const idx = timelineIndex.get(key);
           const val = scoreValue(row, metric);
 
-          if (typeof val !== "number" || Number.isNaN(val) || idx == null) return null;
+          if (typeof val !== "number" || Number.isNaN(val) || idx == null) {
+            return null;
+          }
+
           return `${xAt(idx)},${yAt(val)}`;
         })
         .filter(Boolean);
 
       if (pts.length) {
         const style = metricStyle[metric] || { dash: "", width: 2 };
+
         svg += `<polyline fill="none" stroke="${baseColor}" stroke-width="${style.width}" ${
           style.dash ? `stroke-dasharray="${style.dash}"` : ""
         } points="${pts.join(" ")}"/>`;
@@ -578,7 +709,9 @@ function buildSvgChartGroupCompare(tab, rows) {
           const idx = timelineIndex.get(key);
           const val = scoreValue(row, metric);
 
-          if (typeof val !== "number" || Number.isNaN(val) || idx == null) return;
+          if (typeof val !== "number" || Number.isNaN(val) || idx == null) {
+            return;
+          }
 
           const x = xAt(idx);
           const y = yAt(val);
@@ -599,22 +732,32 @@ function buildSvgChartGroupCompare(tab, rows) {
 
   svg += `</svg>`;
 
-  const legend = `<div class="legend">${legendItems
-    .map(
-      (item) =>
-        `<div class="legend-item"><span class="legend-line" style="${
-          item.dash
-            ? `background:none;border-top:2px dashed ${item.color};height:0;`
-            : `background:${item.color};`
-        }"></span>${escapeHtml(item.label)}</div>`
-    )
-    .join("")}</div>`;
+  const legend = `
+    <div class="legend">
+      ${legendItems
+        .map(
+          (item) => `
+            <div class="legend-item">
+              ${legendSwatch(item.color, item.dash)}
+              ${escapeHtml(item.label)}
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
 
-  return `<div class="chart-wrap">${svg}</div>${legend}`;
+  return `
+    <div class="chart-wrap">
+      ${svg}
+    </div>
+    ${legend}
+  `;
 }
 
 function buildSvgChartSeasonCompare(tab, rows) {
   const grouped = groupSeriesBySeason(rows);
+
   if (!grouped.length) {
     return `<div class="empty-state">Choose one group and one or more seasons to compare.</div>`;
   }
@@ -626,6 +769,7 @@ function buildSvgChartSeasonCompare(tab, rows) {
     for (const row of seasonSeries.entries) {
       for (const m of metrics) {
         const val = scoreValue(row, m);
+
         if (typeof val === "number" && !Number.isNaN(val)) {
           allValues.push(val);
         }
@@ -684,6 +828,7 @@ function buildSvgChartSeasonCompare(tab, rows) {
   for (let i = 0; i <= 5; i++) {
     const value = minY + (span * i / 5);
     const y = yAt(value);
+
     svg += `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="#223246" stroke-width="1"/>`;
     svg += `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#8aa0b8">${value.toFixed(1)}</text>`;
   }
@@ -705,7 +850,10 @@ function buildSvgChartSeasonCompare(tab, rows) {
       const pts = seasonSeries.entries
         .map((row) => {
           const val = scoreValue(row, metric);
-          if (typeof val !== "number" || Number.isNaN(val)) return null;
+
+          if (typeof val !== "number" || Number.isNaN(val)) {
+            return null;
+          }
 
           const t = parseEventDateToTime(row.eventDate);
           let p = 0;
@@ -725,13 +873,17 @@ function buildSvgChartSeasonCompare(tab, rows) {
 
       if (pts.length) {
         const style = metricStyle[metric] || { dash: "", width: 2 };
+
         svg += `<polyline fill="none" stroke="${baseColor}" stroke-width="${style.width}" ${
           style.dash ? `stroke-dasharray="${style.dash}"` : ""
         } points="${pts.join(" ")}"/>`;
 
         seasonSeries.entries.forEach((row, idx) => {
           const val = scoreValue(row, metric);
-          if (typeof val !== "number" || Number.isNaN(val)) return;
+
+          if (typeof val !== "number" || Number.isNaN(val)) {
+            return;
+          }
 
           const t = parseEventDateToTime(row.eventDate);
           let p = 0;
@@ -763,33 +915,49 @@ function buildSvgChartSeasonCompare(tab, rows) {
 
   svg += `</svg>`;
 
-  const legend = `<div class="legend">${legendItems
-    .map(
-      (item) =>
-        `<div class="legend-item"><span class="legend-line" style="${
-          item.dash
-            ? `background:none;border-top:2px dashed ${item.color};height:0;`
-            : `background:${item.color};`
-        }"></span>${escapeHtml(item.label)}</div>`
-    )
-    .join("")}</div>`;
+  const legend = `
+    <div class="legend">
+      ${legendItems
+        .map(
+          (item) => `
+            <div class="legend-item">
+              ${legendSwatch(item.color, item.dash)}
+              ${escapeHtml(item.label)}
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
 
-  return `<div class="chart-wrap">${svg}</div>${legend}`;
+  return `
+    <div class="chart-wrap">
+      ${svg}
+    </div>
+    ${legend}
+  `;
 }
 
 function buildSvgChart(tab, rows) {
-  if (tab.graphMode === "seasons") return buildSvgChartSeasonCompare(tab, rows);
+  if (tab.graphMode === "seasons") {
+    return buildSvgChartSeasonCompare(tab, rows);
+  }
+
   return buildSvgChartGroupCompare(tab, rows);
 }
 
 function buildSeriesRows(tab, rows) {
   if (tab.graphMode === "seasons") {
     const grouped = groupSeriesBySeason(rows);
-    if (!grouped.length) return `<div class="empty-state">No season rows matched this tab yet.</div>`;
+
+    if (!grouped.length) {
+      return `<div class="empty-state">No season rows matched this tab yet.</div>`;
+    }
 
     return `<div class="series-list">${grouped
       .map((g) => {
         const latest = g.entries[g.entries.length - 1];
+
         return `<div class="series-row"><div><strong>${escapeHtml(g.season)}</strong><div class="series-meta"><span class="chip">${escapeHtml(
           latest.circuit || "No circuit"
         )}</span><span class="chip">${escapeHtml(
@@ -802,11 +970,15 @@ function buildSeriesRows(tab, rows) {
   }
 
   const grouped = groupSeriesByGroup(rows);
-  if (!grouped.length) return `<div class="empty-state">No rows matched this tab yet.</div>`;
+
+  if (!grouped.length) {
+    return `<div class="empty-state">No rows matched this tab yet.</div>`;
+  }
 
   return `<div class="series-list">${grouped
     .map((g) => {
       const latest = g.entries[g.entries.length - 1];
+
       return `<div class="series-row"><div><strong>${escapeHtml(g.group)}</strong><div class="series-meta"><span class="chip">${escapeHtml(
         latest.circuit || "No circuit"
       )}</span><span class="chip">${escapeHtml(
@@ -814,14 +986,16 @@ function buildSeriesRows(tab, rows) {
       )}</span><span class="chip">${escapeHtml(
         latest.division || "No division"
       )}</span><span class="chip">${g.entries.length} events</span></div></div><div class="chip">Latest ${escapeHtml(
-        String(latest.scores?.finalScore ?? "—")
-      )}</div></div>`;
+          String(latest.scores?.finalScore ?? "—")
+        )}</div></div>`;
     })
     .join("")}</div>`;
 }
 
 function buildDataTable(rows) {
-  if (!rows.length) return `<div class="empty-state">No progression rows to show.</div>`;
+  if (!rows.length) {
+    return `<div class="empty-state">No progression rows to show.</div>`;
+  }
 
   return `<div class="data-table-wrap"><table class="data-table"><thead><tr><th>Group</th><th>Date</th><th>Event</th><th>Circuit</th><th>Season</th><th>Division</th><th>Final</th><th>Rank</th><th>Penalty</th><th>Effect-Music</th><th>Effect-Visual</th><th>Effect/Artistry</th><th>Music</th><th>Visual</th></tr></thead><tbody>${rows
     .map(
@@ -981,15 +1155,15 @@ function renderTabControls(tab) {
               tab.graphMode === "seasons"
                 ? seasonModeFilters
                 : `
-              <div class="field">
-                <label>Circuit</label>
-                <select data-action="set-circuit">
-                  ${optionHtml("", tab.circuit)}
-                  ${lists.circuits.map((v) => optionHtml(v, tab.circuit)).join("")}
-                </select>
-              </div>
-              ${groupModeFilters}
-            `
+                  <div class="field">
+                    <label>Circuit</label>
+                    <select data-action="set-circuit">
+                      ${optionHtml("", tab.circuit)}
+                      ${lists.circuits.map((v) => optionHtml(v, tab.circuit)).join("")}
+                    </select>
+                  </div>
+                  ${groupModeFilters}
+                `
             }
           </div>
         </div>
@@ -1071,6 +1245,7 @@ function renderTabs() {
   });
 
   const active = getActiveTab();
+
   if (!active) {
     content.innerHTML = `<div class="empty-state">Add a tab to begin.</div>`;
     return;
@@ -1088,6 +1263,7 @@ function render() {
 
 function onTabBarClick(e) {
   const close = e.target.closest("[data-close-tab-id]");
+
   if (close) {
     e.stopPropagation();
     removeTab(close.dataset.closeTabId);
@@ -1095,6 +1271,7 @@ function onTabBarClick(e) {
   }
 
   const btn = e.target.closest("[data-tab-id]");
+
   if (btn) {
     state.activeTabId = btn.dataset.tabId;
     render();
@@ -1103,10 +1280,16 @@ function onTabBarClick(e) {
 
 function onTabContentChange(e) {
   const tab = getActiveTab();
-  if (!tab) return;
+
+  if (!tab) {
+    return;
+  }
 
   const action = e.target.dataset.action;
-  if (!action) return;
+
+  if (!action) {
+    return;
+  }
 
   if (action === "set-graph-mode") {
     tab.graphMode = e.target.value;
@@ -1170,9 +1353,13 @@ function onTabContentChange(e) {
 
 function onTabContentClick(e) {
   const groupChip = e.target.closest('[data-action="remove-compare-group"]');
+
   if (groupChip) {
     const tab = getActiveTab();
-    if (!tab) return;
+
+    if (!tab) {
+      return;
+    }
 
     const group = groupChip.dataset.group;
     tab.compareGroups = (tab.compareGroups || []).filter((g) => g !== group);
@@ -1182,9 +1369,13 @@ function onTabContentClick(e) {
   }
 
   const seasonChip = e.target.closest('[data-action="remove-compare-season"]');
+
   if (seasonChip) {
     const tab = getActiveTab();
-    if (!tab) return;
+
+    if (!tab) {
+      return;
+    }
 
     const season = seasonChip.dataset.season;
     tab.compareSeasons = (tab.compareSeasons || []).filter((s) => s !== season);

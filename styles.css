@@ -269,11 +269,11 @@ svg {
   color: var(--text-soft);
 }
 
-.legend-line {
-  width: 18px;
-  height: 3px;
-  background: #ffffff;
-  border-radius: 999px;
+.legend-swatch{
+  width:18px;
+  height:6px;
+  display:block;
+  flex:0 0 auto;
 }
 
 .table-card {
