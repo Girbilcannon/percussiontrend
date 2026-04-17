@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self';
+    style-src 'self';
+    img-src 'self' data:;
+    connect-src 'self';
+    font-src 'self';
+    object-src 'none';
+    media-src 'none';
+    frame-src 'none';
+    frame-ancestors 'none';
+    base-uri 'self';
+    form-action 'self';
+    manifest-src 'self';
+    worker-src 'self';
+    upgrade-insecure-requests;
+    block-all-mixed-content;
+  " />
+  <title>Percussion Trend - Competition Data Analysis</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="img/logo.png" alt="PercussionTrend.com" class="brand-logo" />
+        <p class="subheader">A Competition Data Analysis Project By Aaron Marine</p>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="saveLayoutBtn">Save Layout</button>
+        <button id="loadLayoutBtn">Load Layout</button>
+      </div>
+    </header>
+
+    <section class="progression-panel card">
+      <div class="panel-head">
+        <div>
+          <h2>Score Progression</h2>
+          <p class="panel-subtitle">Each tab controls its own comparison set.<br>
+          <strong>More Competition Circuits, Groups, and Seasons coming soon!</strong></p>
+        </div>
+
+        <div class="panel-actions">
+          <button id="addTabBtn">Add Tab</button>
+        </div>
+      </div>
+
+      <div id="tabBar" class="tab-bar"></div>
+      <div id="tabContent" class="tab-content"></div>
+    </section>
+
+    <section class="status-bar card">
+      <div class="status-row">
+        <div>
+          <span class="label">Events</span>
+          <span id="eventCount">0</span>
+        </div>
+        <div>
+          <span class="label">Groups</span>
+          <span id="groupCount">0</span>
+        </div>
+        <div>
+          <span class="label">Tabs</span>
+          <span id="tabCount">0</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <template id="tabButtonTemplate">
+    <button class="tab-button">
+      <span class="tab-title"></span>
+      <span class="tab-close" title="Remove tab">×</span>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
