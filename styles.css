@@ -106,6 +106,19 @@ select:focus {
 
 .progression-panel {
   min-height: 700px;
+  width: 100%;
+  min-width: 0;
+}
+
+.panel-head,
+.tab-bar,
+.tab-content,
+.tab-layout,
+.tab-layout > div,
+.tab-controls,
+.chart-card,
+.table-card {
+  min-width: 0;
 }
 
 .panel-head {
