@@ -1,4 +1,5 @@
 const LAYOUT_KEY = "percussion_viewer_layout_v3";
+const AUTO_INDEX_URL = "data/compiled/index.json";
 
 const DEFAULT_SUBS = {
   effectMusic: false,
@@ -210,26 +211,31 @@ function loadLayout() {
   render();
 }
 
-function handleIndexFile(file) {
-  const reader = new FileReader();
+function applyLoadedIndexData(data, sourceName = "") {
+  state.index = data;
+  state.sourceName = sourceName;
 
-  reader.onload = (e) => {
-    try {
-      state.index = JSON.parse(e.target.result);
-      state.sourceName = file.name;
+  if (state.tabs.length === 0) {
+    addTab();
+  }
 
-      if (state.tabs.length === 0) {
-        addTab();
-      }
+  applyDefaultLatestSeasons();
+  render();
+}
 
-      applyDefaultLatestSeasons();
-      render();
-    } catch (err) {
-      alert(`Failed to parse index.json\n\n${err.message}`);
+async function autoLoadIndex() {
+  try {
+    const response = await fetch(AUTO_INDEX_URL, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-  };
 
-  reader.readAsText(file);
+    const data = await response.json();
+    applyLoadedIndexData(data, AUTO_INDEX_URL);
+  } catch (err) {
+    console.error("Failed to auto-load index.json:", err);
+  }
 }
 
 function rowMatchesBaseFilters(row, tab) {
@@ -1022,8 +1028,8 @@ function buildSeriesRows(tab, rows) {
       )}</span><span class="chip">${escapeHtml(
         latest.division || "No division"
       )}</span><span class="chip">${g.entries.length} events</span></div></div><div class="chip">Latest ${escapeHtml(
-        String(latest.scores?.finalScore ?? "—")
-      )}</div></div>`;
+          String(latest.scores?.finalScore ?? "—")
+        )}</div></div>`;
     })
     .join("")}</div>`;
 }
@@ -1421,21 +1427,11 @@ function onTabContentClick(e) {
 }
 
 function wire() {
-  $("loadIndexBtn").addEventListener("click", () => $("indexFileInput").click());
-
-  $("indexFileInput").addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-
-    if (file) {
-      handleIndexFile(file);
-    }
-  });
-
   $("addTabBtn").addEventListener("click", addTab);
 
   $("saveLayoutBtn").addEventListener("click", () => {
     saveLayout();
-    alert("Layout saved in browser storage.");
+    alert("Layout saved.");
   });
 
   $("loadLayoutBtn").addEventListener("click", () => {
@@ -1452,3 +1448,4 @@ wire();
 loadDemoIfNeeded();
 applyDefaultLatestSeasons();
 render();
+autoLoadIndex();
