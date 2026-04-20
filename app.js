@@ -1,5 +1,4 @@
 const LAYOUT_KEY = "percussion_viewer_layout_v3";
-const AUTO_INDEX_URL = "data/compiled/index.json";
 
 const DEFAULT_SUBS = {
   effectMusic: false,
@@ -32,6 +31,20 @@ const state = {
 function parseEventDateToTime(text) {
   const t = Date.parse(text || "");
   return Number.isNaN(t) ? 0 : t;
+}
+
+function getEventRoundSortRank(row) {
+  const name = String(row?.eventName || "").toLowerCase();
+
+  if (name.includes("prelims")) {
+    return 0;
+  }
+
+  if (name.includes("finals")) {
+    return 2;
+  }
+
+  return 1;
 }
 
 function $(id) {
@@ -197,31 +210,26 @@ function loadLayout() {
   render();
 }
 
-function applyLoadedIndexData(data, sourceName = "") {
-  state.index = data;
-  state.sourceName = sourceName;
+function handleIndexFile(file) {
+  const reader = new FileReader();
 
-  if (state.tabs.length === 0) {
-    addTab();
-  }
+  reader.onload = (e) => {
+    try {
+      state.index = JSON.parse(e.target.result);
+      state.sourceName = file.name;
 
-  applyDefaultLatestSeasons();
-  render();
-}
+      if (state.tabs.length === 0) {
+        addTab();
+      }
 
-async function autoLoadIndex() {
-  try {
-    const response = await fetch(AUTO_INDEX_URL, { cache: "no-store" });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      applyDefaultLatestSeasons();
+      render();
+    } catch (err) {
+      alert(`Failed to parse index.json\n\n${err.message}`);
     }
+  };
 
-    const data = await response.json();
-    applyLoadedIndexData(data, AUTO_INDEX_URL);
-  } catch (err) {
-    console.error("Failed to auto-load index.json:", err);
-  }
+  reader.readAsText(file);
 }
 
 function rowMatchesBaseFilters(row, tab) {
@@ -396,12 +404,19 @@ function getFilteredSeries(tab) {
     rows = rows.filter((r) => rowMatchesGroupModeFilters(r, tab));
   }
 
-  rows.sort((a, b) => {
+    rows.sort((a, b) => {
     const ta = parseEventDateToTime(a.eventDate);
     const tb = parseEventDateToTime(b.eventDate);
 
     if (ta !== tb) {
       return ta - tb;
+    }
+
+    const ra = getEventRoundSortRank(a);
+    const rb = getEventRoundSortRank(b);
+
+    if (ra !== rb) {
+      return ra - rb;
     }
 
     const ea = (a.eventName || "").localeCompare(b.eventName || "");
@@ -441,6 +456,13 @@ function groupSeriesByGroup(rows) {
         return ta - tb;
       }
 
+      const ra = getEventRoundSortRank(a);
+      const rb = getEventRoundSortRank(b);
+
+      if (ra !== rb) {
+        return ra - rb;
+      }
+
       const ea = (a.eventName || "").localeCompare(b.eventName || "");
       if (ea !== 0) {
         return ea;
@@ -473,6 +495,13 @@ function groupSeriesBySeason(rows) {
 
       if (ta !== tb) {
         return ta - tb;
+      }
+
+      const ra = getEventRoundSortRank(a);
+      const rb = getEventRoundSortRank(b);
+
+      if (ra !== rb) {
+        return ra - rb;
       }
 
       const ea = (a.eventName || "").localeCompare(b.eventName || "");
@@ -511,6 +540,13 @@ function buildTimeline(rows) {
 
     if (ta !== tb) {
       return ta - tb;
+    }
+
+    const ra = getEventRoundSortRank(a);
+    const rb = getEventRoundSortRank(b);
+
+    if (ra !== rb) {
+      return ra - rb;
     }
 
     const ea = (a.eventName || "").localeCompare(b.eventName || "");
@@ -986,8 +1022,8 @@ function buildSeriesRows(tab, rows) {
       )}</span><span class="chip">${escapeHtml(
         latest.division || "No division"
       )}</span><span class="chip">${g.entries.length} events</span></div></div><div class="chip">Latest ${escapeHtml(
-          String(latest.scores?.finalScore ?? "—")
-        )}</div></div>`;
+        String(latest.scores?.finalScore ?? "—")
+      )}</div></div>`;
     })
     .join("")}</div>`;
 }
@@ -1385,11 +1421,21 @@ function onTabContentClick(e) {
 }
 
 function wire() {
+  $("loadIndexBtn").addEventListener("click", () => $("indexFileInput").click());
+
+  $("indexFileInput").addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+
+    if (file) {
+      handleIndexFile(file);
+    }
+  });
+
   $("addTabBtn").addEventListener("click", addTab);
 
   $("saveLayoutBtn").addEventListener("click", () => {
     saveLayout();
-    alert("Layout saved.");
+    alert("Layout saved in browser storage.");
   });
 
   $("loadLayoutBtn").addEventListener("click", () => {
@@ -1406,4 +1452,3 @@ wire();
 loadDemoIfNeeded();
 applyDefaultLatestSeasons();
 render();
-autoLoadIndex();
